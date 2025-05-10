@@ -9,80 +9,18 @@ module.exports = {
     author: "Duong Su",
     countDown: 5,
     role: 0,
-    shortDescription: {
-      vi: "Quản lý thông tin người dùng",
-      en: "Manage user information"
-    },
-    longDescription: {
-      vi: "Thêm hoặc xem thông tin cá nhân (tên, biệt danh, tuổi, sở thích, ảnh/video/GIF). Nhập 'cancel' để hủy quá trình.",
-      en: "Add or view personal information (name, nickname, age, hobby, photo/video/GIF). Type 'cancel' to cancel the process."
-    },
+    shortDescription: "Thêm thông tin người dùng",
+    longDescription: "Thêm thông tin cá nhân (tên, biệt danh, tuổi, sở thích, ảnh/video/GIF).",
     category: "utility",
-    guide: {
-      vi: `{pn} add - Thêm thông tin cá nhân\n`
-        + `{pn} [@tag] - Xem thông tin người được tag\n`
-        + `{pn} me - Xem thông tin bản thân\n`
-        + `{pn} - Xem thông tin bản thân\n`
-        + `Nhập 'cancel' để hủy khi đang thêm thông tin.`,
-      en: `{pn} add - Add personal information\n`
-        + `{pn} [@tag] - View tagged user's information\n`
-        + `{pn} me - View your information\n`
-        + `{pn} - View your information\n`
-        + `Type 'cancel' to cancel during the process.`
-    },
+    guide: `{pn} add - Them thong tin ca nhan\n`
+         + `{pn} [@tag] - Xem thong tin nguoi duoc tag\n`
+         + `{pn} me - Xem thong tin ban than\n`
+         + `{pn} - Xem thong tin ban than\n`
+         + `Nhap 'cancel' de huy khi dang them thong tin.`,
     packages: ["axios"]
   },
 
-  langs: {
-    vi: {
-      noInfo: "Bạn chưa điền thông tin! Vui lòng ghi {pn} add để đăng ký.",
-      noInfoTarget: "Người dùng chưa điền thông tin!",
-      invalidSyntax: "Cú pháp không hợp lệ! Sử dụng `{pn}`, `{pn} me`, `{pn} @tag`, hoặc `{pn} add`.",
-      canceled: "Đã hủy quá trình điền thông tin!",
-      nameTooLong: "Tên tối đa 20 ký tự và không được xuống dòng, vui lòng nhập lại.",
-      invalidAge: "Tuổi phải là số hợp lệ (6-120) hoặc năm sinh từ 1990 đến 2019.",
-      invalidAttachment: "Vui lòng gửi một ảnh, video hoặc GIF (tối đa 14MB)! Gửi lại hoặc nhập 'cancel' để hủy.",
-      fileTooLarge: "File vượt quá 14MB, vui lòng gửi file nhỏ hơn!",
-      success: "✅ Đã đăng ký thông tin thành công!\nĐể xem thông tin, gõ: {pn} me",
-      errorNickname: "⚠️ Lỗi khi đổi biệt danh, nhưng thông tin đã được lưu.",
-      error: "Đã xảy ra lỗi, vui lòng thử lại sau!",
-      userInfo: "ℹ️ Thông tin của {name}:\n"
-              + "⚜️ Tên: {name}\n"
-              + "⚜️ Biệt danh: {nickname}\n"
-              + "⚜️ Tuổi: {age}\n"
-              + "⚜️ Sở thích: {hobby}",
-      prompt_name: "Nhập tên của bạn :3",
-      prompt_nickname: "Biệt danh của bạn hoặc tên trong game là gì :b",
-      prompt_age: "Vui lòng nhập năm sinh hoặc tuổi của bạn :>",
-      prompt_hobby: "Sở thích của bạn là gì?",
-      prompt_attachment: "Hãy gửi ảnh, video hoặc GIF (tối đa 14MB) để hoàn tất thông tin."
-    },
-    en: {
-      noInfo: "You haven't filled in your information! Please use {pn} add to register.",
-      noInfoTarget: "The user hasn't filled in their information!",
-      invalidSyntax: "Invalid syntax! Use `{pn}`, `{pn} me`, `{pn} @tag`, or `{pn} add`.",
-      canceled: "The information filling process has been canceled!",
-      nameTooLong: "Name must be 20 characters or less and cannot contain newlines, please try again.",
-      invalidAge: "Age must be a valid number (6-120) or birth year from 1990 to 2019.",
-      invalidAttachment: "Please send a photo, video, or GIF (max 14MB)! Send again or type 'cancel' to cancel.",
-      fileTooLarge: "File exceeds 14MB, please send a smaller file!",
-      success: "✅ Successfully registered information!\nTo view your info, type: {pn} me",
-      errorNickname: "⚠️ Error changing nickname, but your information has been saved.",
-      error: "An error occurred, please try again later!",
-      userInfo: "ℹ️ Information of {name}:\n"
-              + "⚜️ Name: {name}\n"
-              + "⚜️ Nickname: {nickname}\n"
-              + "⚜️ Age: {age}\n"
-              + "⚜️ Hobby: {hobby}",
-      prompt_name: "Enter your name :3",
-      prompt_nickname: "What's your nickname or in-game name? :b",
-      prompt_age: "Please enter your birth year or age :>",
-      prompt_hobby: "What are your hobbies?",
-      prompt_attachment: "Please send a photo, video, or GIF (max 14MB) to complete your information."
-    }
-  },
-
-  onStart: async function ({ api, args, message, event, usersData, getLang }) {
+  onStart: async function ({ api, args, message, event, usersData }) {
     const { threadID, senderID, mentions } = event;
     const infoDir = path.join(__dirname, "../../info");
     const infoFile = path.join(infoDir, "info.json");
@@ -94,15 +32,20 @@ module.exports = {
     let userInfo = fs.existsSync(infoFile) ? JSON.parse(fs.readFileSync(infoFile)) : {};
 
     if (args[0] === "add") {
+      // Chỉ đặt step mới, giữ nguyên dữ liệu cũ nếu có
       userInfo[senderID] = { ...userInfo[senderID], step: "name" };
       fs.writeFileSync(infoFile, JSON.stringify(userInfo, null, 2));
-      return message.reply(getLang("prompt_name"));
+      return message.reply("Nhập tên của bạn :3");
     } else if (args[0] === "me" || args.length === 0) {
       if (!userInfo[senderID] || !userInfo[senderID].name) {
-        return message.reply(getLang("noInfo"));
+        return message.reply("Bạn chưa điền thông tin! vui lòng ghi .info add để đăng kí");
       }
       const { name, nickname, age, hobby, attachment } = userInfo[senderID];
-      const msg = getLang("userInfo", { name, nickname, age, hobby });
+      const msg = `ℹ️𝐓𝐡𝐨̂𝐧𝐠 𝐭𝐢𝐧 𝐜𝐮̉𝐚 𝐛𝐚̣𝐧:\n`
+                + `⚜️𝐓𝐞̂𝐧: ${name}\n`
+                + `⚜️𝐁𝐢𝐞̣̂𝐭 𝐝𝐚𝐧𝐡: ${nickname}\n`
+                + `⚜️𝐓𝐮𝐨̂̉𝐢: ${age}\n`
+                + `⚜️𝐒𝐨̛̉ 𝐭𝐡𝐢́𝐜𝐡: ${hobby}`;
       return api.sendMessage(
         { body: msg, attachment: attachment ? fs.createReadStream(path.join(infoDir, attachment)) : null },
         threadID
@@ -110,20 +53,24 @@ module.exports = {
     } else if (Object.keys(mentions).length > 0) {
       const targetID = Object.keys(mentions)[0];
       if (!userInfo[targetID] || !userInfo[targetID].name) {
-        return message.reply(getLang("noInfoTarget"));
+        return message.reply("Người dùng chưa điền thông tin!");
       }
       const { name, nickname, age, hobby, attachment } = userInfo[targetID];
-      const msg = getLang("userInfo", { name: mentions[targetID].replace(/@/g, ""), nickname, age, hobby });
+      const msg = `ℹ️𝐓𝐡𝐨̂𝐧𝐠 𝐭𝐢𝐧 𝐜𝐮̉𝐚 ${mentions[targetID].replace(/@/g, "")}:\n`
+                + `⚜️𝐓𝐞̂𝐧: ${name}\n`
+                + `⚜️𝐁𝐢𝐞̣̂𝐭 𝐝𝐚𝐧𝐡: ${nickname}\n`
+                + `⚜️�	T𝐮𝐨̂̉𝐢: ${age}\n`
+                + `⚜️𝐒𝐨̛̉ 𝐭𝐡𝐢́𝐜𝐡: ${hobby}`;
       return api.sendMessage(
         { body: msg, attachment: attachment ? fs.createReadStream(path.join(infoDir, attachment)) : null },
         threadID
       );
     } else {
-      return message.reply(getLang("invalidSyntax"));
+      return message.reply("Cú pháp không hợp lệ! Sử dụng `.info`, `.info me`, `.info @tag`, hoặc `.info add`.");
     }
   },
 
-  onChat: async function ({ api, event, message, usersData, getLang }) {
+  onChat: async function ({ api, event, message, usersData }) {
     const { threadID, senderID, body } = event;
     const infoDir = path.join(__dirname, "../../info");
     const infoFile = path.join(infoDir, "info.json");
@@ -137,9 +84,10 @@ module.exports = {
     const input = body.trim().toLowerCase();
 
     if (input === "cancel") {
+      // Chỉ xóa step, giữ nguyên dữ liệu đã điền
       userInfo[senderID] = { ...userInfo[senderID], step: undefined };
       fs.writeFileSync(infoFile, JSON.stringify(userInfo, null, 2));
-      return message.reply(getLang("canceled"));
+      return message.reply("Đã hủy quá trình điền thông tin!");
     }
 
     const superscriptMap = {
@@ -152,17 +100,17 @@ module.exports = {
       if (step === "name") {
         const nameInput = body.trim();
         if (nameInput.length > 20 || body.includes("\n")) {
-          return message.reply(getLang("nameTooLong"));
+          return message.reply("Tên tối đa 20 kí tự và không được xuống dòng, vui lòng nhập lại");
         }
         userInfo[senderID].name = nameInput;
         userInfo[senderID].step = "nickname";
         fs.writeFileSync(infoFile, JSON.stringify(userInfo, null, 2));
-        return message.reply(getLang("prompt_nickname"));
+        return message.reply("Biệt danh của bạn hoặc tên trong game là gì :b");
       } else if (step === "nickname") {
         userInfo[senderID].nickname = body.trim();
         userInfo[senderID].step = "age";
         fs.writeFileSync(infoFile, JSON.stringify(userInfo, null, 2));
-        return message.reply(getLang("prompt_age"));
+        return message.reply("Vui lòng nhập năm sinh của bạn :>");
       } else if (step === "age") {
         let age;
         const inputAge = body.trim().toLowerCase();
@@ -179,40 +127,37 @@ module.exports = {
           if (year >= 1990 && year <= 2019) {
             age = 2025 - year;
           } else {
-            return message.reply(getLang("invalidAge"));
+            return message.reply("Năm sinh phải từ 1990 đến 2019:");
           }
         } else {
           age = parseInt(inputAge);
           if (isNaN(age) || age < 6 || age > 120) {
-            return message.reply(getLang("invalidAge"));
+            return message.reply("Tuổi phải là số hợp lệ: ví dụ 18 hoặc 2006");
           }
         }
 
         userInfo[senderID].age = age;
-        userInfo[senderID].step = "hobby";
-        fs.writeFileSync(infoFile, JSON.stringify(userInfo, null, 2));
-        return message.reply(getLang("prompt_hobby"));
-      } else if (step === "hobby") {
-        userInfo[senderID].hobby = body.trim();
         userInfo[senderID].step = "attachment";
         fs.writeFileSync(infoFile, JSON.stringify(userInfo, null, 2));
-        return message.reply(getLang("prompt_attachment"));
+        return message.reply("Hãy gửi ảnh, video hoặc GIF (tối đa 14MB) để hoàn tất thông tin");
       } else if (step === "attachment") {
         if (!event.attachments || !event.attachments[0]) {
-          return message.reply(getLang("invalidAttachment"));
+          return message.reply("Vui lòng gửi một ảnh, video hoặc GIF! Gửi lại hoặc nhập 'cancel' để hủy:");
         }
 
         const attachment = event.attachments[0];
         const validTypes = ["photo", "video", "animated_image"];
         if (!validTypes.includes(attachment.type)) {
-          return message.reply(getLang("invalidAttachment"));
+          return message.reply("Vui lòng gửi một ảnh, video hoặc GIF! Gửi lại hoặc nhập 'cancel' để hủy:");
         }
+
+        // Tải file để kiểm tra kích thước
         const response = await axios.get(attachment.url, { responseType: "arraybuffer" });
         const fileSize = Buffer.from(response.data).length;
         const maxSize = 14 * 1024 * 1024; // 14MB
 
         if (fileSize > maxSize) {
-          return message.reply(getLang("fileTooLarge"));
+          return message.reply("File vượt quá 14MB, vui lòng gửi file nhỏ hơn!");
         }
         let ext;
         switch (attachment.type) {
@@ -237,15 +182,15 @@ module.exports = {
         const nicknameWithAge = `${userInfo[senderID].nickname} ${toSuperscript(userInfo[senderID].age)}`;
         try {
           await api.changeNickname(nicknameWithAge, threadID, senderID);
-          return message.reply(getLang("success") + `\n🔰 Đã đổi biệt danh thành: ${nicknameWithAge}`);
+          return message.reply(`🔰Đã đổi tên bạn thành: ${nicknameWithAge}\n✅Bạn đã đăng kí thành công để xem thông tin gõ: \n .info me`);
         } catch (error) {
           console.error("Error changing nickname:", error);
-          return message.reply(getLang("success") + "\n" + getLang("errorNickname"));
+          return message.reply(`⚠️Bị lỗi trong quá trình đổi tên của bạn\n ✅Bạn đã đăng kí thành công để xem thông tin gõ: \n .info me`);
         }
       }
     } catch (error) {
       console.error("Error in onChat:", error);
-      return message.reply(getLang("error"));
+      return message.reply("Đã xảy ra lỗi, vui lòng thử lại sau!");
     }
   }
 };
