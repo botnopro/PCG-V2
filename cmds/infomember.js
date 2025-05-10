@@ -51,13 +51,11 @@ module.exports = {
               + "⚜️ Biệt danh: {nickname}\n"
               + "⚜️ Tuổi: {age}\n"
               + "⚜️ Sở thích: {hobby}",
-      prompts: {
-        name: "Nhập tên của bạn :3",
-        nickname: "Biệt danh của bạn hoặc tên trong game là gì :b",
-        age: "Vui lòng nhập năm sinh hoặc tuổi của bạn :>",
-        hobby: "Sở thích của bạn là gì?",
-        attachment: "Hãy gửi ảnh, video hoặc GIF (tối đa 14MB) để hoàn tất thông tin."
-      }
+      prompt_name: "Nhập tên của bạn :3",
+      prompt_nickname: "Biệt danh của bạn hoặc tên trong game là gì :b",
+      prompt_age: "Vui lòng nhập năm sinh hoặc tuổi của bạn :>",
+      prompt_hobby: "Sở thích của bạn là gì?",
+      prompt_attachment: "Hãy gửi ảnh, video hoặc GIF (tối đa 14MB) để hoàn tất thông tin."
     },
     en: {
       noInfo: "You haven't filled in your information! Please use {pn} add to register.",
@@ -76,13 +74,11 @@ module.exports = {
               + "⚜️ Nickname: {nickname}\n"
               + "⚜️ Age: {age}\n"
               + "⚜️ Hobby: {hobby}",
-      prompts: {
-        name: "Enter your name :3",
-        nickname: "What's your nickname or in-game name? :b",
-        age: "Please enter your birth year or age :>",
-        hobby: "What are your hobbies?",
-        attachment: "Please send a photo, video, or GIF (max 14MB) to complete your information."
-      }
+      prompt_name: "Enter your name :3",
+      prompt_nickname: "What's your nickname or in-game name? :b",
+      prompt_age: "Please enter your birth year or age :>",
+      prompt_hobby: "What are your hobbies?",
+      prompt_attachment: "Please send a photo, video, or GIF (max 14MB) to complete your information."
     }
   },
 
@@ -98,10 +94,9 @@ module.exports = {
     let userInfo = fs.existsSync(infoFile) ? JSON.parse(fs.readFileSync(infoFile)) : {};
 
     if (args[0] === "add") {
-      // Chỉ đặt step mới, giữ nguyên dữ liệu cũ nếu có
       userInfo[senderID] = { ...userInfo[senderID], step: "name" };
       fs.writeFileSync(infoFile, JSON.stringify(userInfo, null, 2));
-      return message.reply(getLang("prompts.name"));
+      return message.reply(getLang("prompt_name"));
     } else if (args[0] === "me" || args.length === 0) {
       if (!userInfo[senderID] || !userInfo[senderID].name) {
         return message.reply(getLang("noInfo"));
@@ -162,12 +157,12 @@ module.exports = {
         userInfo[senderID].name = nameInput;
         userInfo[senderID].step = "nickname";
         fs.writeFileSync(infoFile, JSON.stringify(userInfo, null, 2));
-        return message.reply(getLang("prompts.nickname"));
+        return message.reply(getLang("prompt_nickname"));
       } else if (step === "nickname") {
         userInfo[senderID].nickname = body.trim();
         userInfo[senderID].step = "age";
         fs.writeFileSync(infoFile, JSON.stringify(userInfo, null, 2));
-        return message.reply(getLang("prompts.age"));
+        return message.reply(getLang("prompt_age"));
       } else if (step === "age") {
         let age;
         const inputAge = body.trim().toLowerCase();
@@ -196,12 +191,12 @@ module.exports = {
         userInfo[senderID].age = age;
         userInfo[senderID].step = "hobby";
         fs.writeFileSync(infoFile, JSON.stringify(userInfo, null, 2));
-        return message.reply(getLang("prompts.hobby"));
+        return message.reply(getLang("prompt_hobby"));
       } else if (step === "hobby") {
         userInfo[senderID].hobby = body.trim();
         userInfo[senderID].step = "attachment";
         fs.writeFileSync(infoFile, JSON.stringify(userInfo, null, 2));
-        return message.reply(getLang("prompts.attachment"));
+        return message.reply(getLang("prompt_attachment"));
       } else if (step === "attachment") {
         if (!event.attachments || !event.attachments[0]) {
           return message.reply(getLang("invalidAttachment"));
@@ -212,8 +207,6 @@ module.exports = {
         if (!validTypes.includes(attachment.type)) {
           return message.reply(getLang("invalidAttachment"));
         }
-
-        // Tải file để kiểm tra kích thước
         const response = await axios.get(attachment.url, { responseType: "arraybuffer" });
         const fileSize = Buffer.from(response.data).length;
         const maxSize = 14 * 1024 * 1024; // 14MB
@@ -221,8 +214,6 @@ module.exports = {
         if (fileSize > maxSize) {
           return message.reply(getLang("fileTooLarge"));
         }
-
-        // Xác định đuôi file
         let ext;
         switch (attachment.type) {
           case "photo":
