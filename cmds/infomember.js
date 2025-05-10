@@ -143,6 +143,20 @@ module.exports = {
           return message.reply("File vượt quá 14MB, vui lòng gửi file nhỏ hơn!");
         }
 
+        // Xác định đuôi file
+        let ext;
+        switch (attachment.type) {
+          case "photo":
+            ext = ".jpg";
+            break;
+          case "video":
+            ext = ".mp4";
+            break;
+          case "animated_image":
+            ext = ".gif";
+            break;
+        }
+
         // Xóa file cũ nếu có
         if (userInfo[senderID].attachment) {
           const oldFilePath = path.join(infoDir, userInfo[senderID].attachment);
@@ -339,12 +353,10 @@ module.exports = {
 
         const filePath = path.join(infoDir, `${senderID}_${Date.now()}${ext}`);
         fs.writeFileSync(filePath, Buffer.from(response.data));
-
         userInfo[senderID].attachment = path.basename(filePath);
         userInfo[senderID].step = undefined;
         userInfo[senderID].prevSteps = [];
         fs.writeFileSync(infoFile, JSON.stringify(userInfo, null, 2));
-
         const nicknameWithAge = `${userInfo[senderID].nickname} ${toSuperscript(userInfo[senderID].age)}`;
         try {
           await api.changeNickname(nicknameWithAge, threadID, senderID);
