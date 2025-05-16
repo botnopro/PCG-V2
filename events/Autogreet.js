@@ -13,19 +13,14 @@ module.exports = {
     },
 
     onStart: async function ({ api }) {
+        // Ví dụ cơ bản về hàm gửi tin nhắn theo thời gian
+        // VD: "0 6 * * *" chạy lúc 0 phút, 6 giờ (6:00 AM)
+        // Định dạng: minute hour * * *
         const settings = {
-            timezone: "Asia/Ho_Chi_Minh", // Múi giờ Việt Nam
+            timezone: "Asia/Ho_Chi_Minh",
             schedules: [
-              /* Ví dụ cơ bản về hàm gửi tin nhắn theo thời gian
-              ví dụ 0 6 * * *
-                   0 phút 6 giờ x ngày x tháng x năm
-              {
-                    time: "", // Điền thời gian (cron format, VD: "0 8 * * *" cho 8:00 AM)
-                    message: "" // Điền lời chào (VD: "Chúc buổi sáng vui vẻ! ({time})")
-                },
-                */
                 {
-                    time: "0 8 * * *", // 8:00 AM
+                    time: "30 8 * * *", // 8:30 AM
                     message: "🌞 Chào buổi sáng! Bắt đầu ngày mới thật năng động nhé! ({time})"
                 },
                 {
@@ -33,15 +28,15 @@ module.exports = {
                     message: "☀️ Chào buổi trưa! Chúc mọi người ăn trưa ngon miệng! ({time})"
                 },
                 {
-                    time: "20 12 * * *",
-                    message: "Ngủ trưa thôi :v"
+                    time: "25 12 * * *", // 12:20 PM
+                    message: "😴 Ngủ trưa thôi :v ({time})"
                 },
                 {
                     time: "0 16 * * *", // 4:00 PM
                     message: "🌄 Chào buổi chiều! Thư giãn và tiếp tục công việc nào! ({time})"
                 }
             ],
-            groups: [] // Để trống: gửi tất cả nhóm; thêm threadID nếu muốn: ["123456789"]
+            groups: [] // Để trống: gửi tất cả nhóm; thêm threadID: ["123456789"]
         };
 
         // Gửi tin nhắn
@@ -54,7 +49,7 @@ module.exports = {
         const threads = (await api.getThreadList(100, null, ["INBOX"])).filter(t => t.isGroup);
         const targets = settings.groups.length ? threads.filter(t => settings.groups.includes(t.threadID)) : threads;
 
-        // Lập lịch cho mỗi schedule
+        // Lập lịch
         settings.schedules.forEach(schedule => {
             if (schedule.time && schedule.message) {
                 cron.schedule(schedule.time, () => {
