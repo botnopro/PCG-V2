@@ -4,7 +4,7 @@ module.exports = {
 	config: {
 		name: "rules",
 		version: "1.7",
-		author: "NTKhang-DuongApi",
+		author: "NTKhang, mod by Dương Sú",
 		countDown: 5,
 		role: 0,
 		description: {
