@@ -97,7 +97,7 @@ module.exports = {
         const mediaDir = type === "audio" ? CACHE_AUDIO_DIR : CACHE_VIDEO_DIR;
         const filePath = path.join(mediaDir, `${cacheKey}.${type === "audio" ? "mp3" : "mp4"}`);
         if (cacheHistory[cacheKey] && fs.existsSync(filePath)) {
-            await message.reply(`🎵 Tệp của bạn yêu cầu có trong bộ nhớ tạm của bo\n💫Đang bắt đầu gửi ngay bây giờ.. \n⚜️Ytdownload by Dương Api`);
+            await message.reply(`🎵 Tệp của bạn yêu cầu có trong bộ nhớ tạm của bot\n💫Đang bắt đầu gửi ngay bây giờ.. \n⚜️Ytdownload by Dương Api`);
             await sendMedia(api, threadID, messageID, filePath);
             return;
         }
