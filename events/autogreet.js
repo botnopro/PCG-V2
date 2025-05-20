@@ -1,69 +1,61 @@
-const moment = require("moment");
+const moment = require("moment-timezone");
 
 module.exports = {
     config: {
         name: "autogreet",
-        version: "1.5",
+        version: "1.7",
         author: "Dương Sú",
         role: 0,
         category: "system"
     },
 
     onStart: async function ({ api }) {
-        console.log(`AutoGreet: Started at ${moment().format("YYYY-MM-DD HH:mm:ss")} (Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone})`);
+        const timezone = "Asia/Ho_Chi_Minh"; // Múi giờ Việt Nam
+        console.log(`AutoGreet: Started at ${moment().tz(timezone).format("YYYY-MM-DD HH:mm:ss")} (Timezone: ${timezone})`);
 
-        const settings = {
-            schedules: [
-                { hour: 8, minute: 30, message: "🌞 Chào buổi sáng! ({time})" },
-                { hour: 12, minute: 0, message: "☀️ Chào buổi trưa! ({time})" },
-                { hour: 12, minute: 20, message: "😴 Ngủ trưa thôi :v ({time})" },
-                { hour: 22, minute: 22, message: "🌄 Chào buổi toi!" }
-            ],
-            groups: []
-        };
-
-        const sendGreeting = (message, threadID) => {
-            try {
-                const time = moment().format("HH:mm A");
-                const msg = message.replace("{time}", time);
-                api.sendMessage(msg, threadID, (err) => {
-                    if (err) {
-                        console.error(`AutoGreet: Error sending to ${threadID} at ${moment().format("HH:mm:ss")}: ${err.message}`);
-                    } else {
-                        console.log(`AutoGreet: Sent "${msg}" to ${threadID} at ${moment().format("HH:mm:ss")}`);
-                    }
-                });
-            } catch (err) {
-                console.error(`AutoGreet: Send failed at ${moment().format("HH:mm:ss")}: ${err.message}`);
-            }
-        };
+        const schedules = [
+            { hour: 8, minute: 30, message: "🌞 Chào buổi sáng! ({time})" },
+            { hour: 12, minute: 0, message: "☀️ Chào buổi trưa! ({time})" },
+            { hour: 12, minute: 20, message: "😴 Ngủ trưa thôi :v ({time})" },
+            { hour: 22, minute: 22, message: "🌄 Chào buổi tối! ({time})" }
+        ];
 
         let threads = [];
         try {
             threads = (await api.getThreadList(100, null, ["INBOX"])).filter(t => t.isGroup);
-            console.log(`AutoGreet: Found ${threads.length} groups: ${threads.map(t => t.threadID).join(", ")}`);
+            console.log(`AutoGreet: Found ${threads.length} groups`);
         } catch (err) {
-            console.error(`AutoGreet: Fetch threads failed: ${err.message}`);
-        }
-
-        const targets = settings.groups.length ? threads.filter(t => settings.groups.includes(t.threadID)) : threads;
-        if (!targets.length) {
-            console.warn("AutoGreet: No groups found");
+            console.error("AutoGreet: Failed to get group list:", err.message);
             return;
         }
 
-        setInterval(() => {
-            const now = moment();
-            const currentHour = now.hour();
-            const currentMinute = now.minute();
-            console.log(`AutoGreet: Checking time ${now.format("HH:mm:ss")}`);
+        const sendGreeting = (message) => {
+            const time = moment().tz(timezone).format("HH:mm A");
+            const finalMsg = message.replace("{time}", time);
+            for (const thread of threads) {
+                api.sendMessage(finalMsg, thread.threadID, err => {
+                    if (err) console.error(`Send error to ${thread.threadID}:`, err.message);
+                    else console.log(`Sent to ${thread.threadID} at ${time}`);
+                });
+            }
+        };
 
-            settings.schedules.forEach(schedule => {
-                if (currentHour === schedule.hour && currentMinute === schedule.minute) {
-                    console.log(`AutoGreet: Triggering "${schedule.message}" at ${now.format("HH:mm:ss")}`);
-                    targets.forEach(t => sendGreeting(schedule.message, t.threadID));
-                }
-            });
-        }, 30000); // Kiểm tra mỗi 30 giây
+        const scheduleMessage = (schedule) => {
+            const now = moment().tz(timezone);
+            const target = moment().tz(timezone).hour(schedule.hour).minute(schedule.minute).second(0);
+            if (target.isBefore(now)) {
+                target.add(1, 'day');
+            }
+
+            const delay = target.diff(now);
+            console.log(`AutoGreet: Scheduling "${schedule.message}" at ${target.format("YYYY-MM-DD HH:mm:ss")}`);
+
+            setTimeout(() => {
+                sendGreeting(schedule.message);
+                scheduleMessage(schedule); // Lặp lại cho ngày hôm sau
+            }, delay);
+        };
+
+        schedules.forEach(scheduleMessage);
     }
 };
