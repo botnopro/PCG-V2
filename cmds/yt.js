@@ -4,15 +4,15 @@ const ytdl = require("ytdl-core");
 const fs = require("fs");
 const path = require("path");
 const { ogmp3 } = require("../lib/youtubedl.js");
-const LimitAud = 26 * 1024 * 1024; // 26MB
-const LimitVid = 83 * 1024 * 1024; // 83MB
+const LimitAud = 26 * 1024 * 1024; // 26MB for audio
+const LimitVid = 83 * 1024 * 1024; // 83MB for video
 
 module.exports = {
 	config: {
 		name: "yt",
 		aliases: ["playaudio", "playvideo"],
-		version: "1.8",
-		author: "Grok",
+		version: "1.9",
+		author: "Dương Api",
 		countDown: 5,
 		role: 0,
 		description: {
@@ -31,8 +31,8 @@ module.exports = {
 			missingInput: "Vui lòng nhập từ khóa hoặc link YouTube.",
 			invalidType: "Vui lòng chọn -a (audio) hoặc -v (video).",
 			searching: "🔍 Đang tìm kiếm: %1...",
-			downloadingAudio: "🌀🎵 Đang tải audio: %1 (chất lượng: 128kbps)",
-			downloadingVideo: "🌀🎥 Đang tải video: %1 (chất lượng: 480p)",
+			downloadingAudio: "🌀🎵 Đang tải audio: %1 (chất lượng: 128kbps)...",
+			downloadingVideo: "🌀🎥 Đang tải video: %1 (chất lượng: 480p)...",
 			tooLargeAudio: "Âm thanh nặng quá (>26MB), không thể tải.",
 			tooLargeVideo: "Video nặng quá (>83MB), không thể tải.",
 			notFound: "Không tìm thấy hoặc không tải được video/audio này.",
@@ -57,6 +57,8 @@ module.exports = {
 		const { threadID, messageID } = event;
 		const input = args.join(" ");
 		if (!input) return message.reply(getLang("missingInput"));
+
+		// Xác định loại tải (audio hoặc video)
 		const type = args.includes("-v") ? "video" : args.includes("-a") ? "audio" : null;
 		if (!type) return message.reply(getLang("invalidType"));
 		const query = args.filter(a => !a.startsWith("-")).join(" ");
@@ -88,10 +90,14 @@ module.exports = {
 				return message.reply(getLang("notFound"));
 			}
 		}
+
+		// Xác định chất lượng và giới hạn
 		const quality = type === "audio" ? "128" : "480";
 		const limit = type === "audio" ? LimitAud : LimitVid;
 		const downloadingMsg = type === "audio" ? getLang("downloadingAudio", title) : getLang("downloadingVideo", title);
 		const tooLargeMsg = type === "audio" ? getLang("tooLargeAudio") : getLang("tooLargeVideo");
+
+		// Gửi thông báo tải kèm thumbnail
 		try {
 			await message.reply({
 				body: downloadingMsg,
@@ -101,8 +107,11 @@ module.exports = {
 			console.error(`Play: Error sending thumbnail for ${url}:`, e);
 			await message.reply(downloadingMsg);
 		}
+
+		// Tải media
 		let result;
 		try {
+			// Tăng số lần thử cho ogmp3
 			for (let i = 0; i < 5; i++) {
 				result = await ogmp3.download(url, quality, type);
 				if (result.status) break;
@@ -111,6 +120,8 @@ module.exports = {
 			}
 			if (!result.status) throw new Error(result.error || "ogmp3 failed after 5 attempts");
 			result = result.result;
+
+			// Kiểm tra kích thước trước khi tải
 			const fileSize = await getFileSize(result.download);
 			if (fileSize > limit) {
 				return message.reply(tooLargeMsg);
@@ -135,6 +146,8 @@ module.exports = {
 				return message.reply(getLang("notFound"));
 			}
 		}
+
+		// Tải file về buffer
 		let filePath;
 		try {
 			const response = await axios({
@@ -150,18 +163,50 @@ module.exports = {
 				writer.on("finish", resolve);
 				writer.on("error", reject);
 			});
+
+			// Kiểm tra file hợp lệ
+			const stats = fs.statSync(filePath);
+			if (stats.size === 0) throw new Error("File is empty");
 		} catch (e) {
 			console.error(`Play: Error downloading file from ${result.download} (videoId: ${videoId}):`, e);
+			if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
 			return message.reply(getLang("error", `Không tải được ${type === "audio" ? "audio" : "video"}.`));
 		}
+
+		// Gửi media (thử gửi video, fallback document nếu thất bại)
 		try {
-			const messageObj = {
-				body: "",
-				attachment: fs.createReadStream(filePath)
-			};
-			await api.sendMessage(messageObj, threadID, () => {
-				fs.unlinkSync(filePath);
-			}, messageID);
+			for (let i = 0; i < 2; i++) {
+				try {
+					const messageObj = {
+						body: "",
+						attachment: fs.createReadStream(filePath)
+					};
+					await api.sendMessage(messageObj, threadID, () => {
+						fs.unlinkSync(filePath);
+					}, messageID);
+					return;
+				} catch (e) {
+					if (i === 1 || type === "audio") throw e;
+					console.warn(`Play: Retry sending ${type} as document for ${url} (videoId: ${videoId}):`, e);
+					// Thử gửi video dưới dạng document
+					const messageObj = {
+						body: "",
+						attachment: {
+							type: "file",
+							payload: {
+								url: filePath,
+								is_reusable: true
+							},
+							filename: `${result.title}.mp4`,
+							mimeType: "video/mp4"
+						}
+					};
+					await api.sendMessage(messageObj, threadID, () => {
+						fs.unlinkSync(filePath);
+					}, messageID);
+					return;
+				}
+			}
 		} catch (e) {
 			console.error(`Play: Error sending ${type} for ${url} (videoId: ${videoId}, size: ${fs.statSync(filePath).size} bytes):`, e);
 			fs.unlinkSync(filePath);
@@ -169,6 +214,8 @@ module.exports = {
 		}
 	}
 };
+
+// Hàm ytMp3
 async function ytMp3(url) {
 	return new Promise((resolve, reject) => {
 		const userAgents = [
@@ -192,6 +239,8 @@ async function ytMp3(url) {
 		}).catch(reject);
 	});
 }
+
+// Hàm ytMp4
 async function ytMp4(url) {
 	return new Promise((resolve, reject) => {
 		const userAgents = [
@@ -215,6 +264,8 @@ async function ytMp4(url) {
 		}).catch(reject);
 	});
 }
+
+// Hàm getFileSize
 async function getFileSize(url) {
 	try {
 		const response = await axios.head(url);
