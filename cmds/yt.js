@@ -12,7 +12,6 @@ const CACHE_AUDIO_DIR = path.join(CACHE_DIR, "audio");
 const CACHE_VIDEO_DIR = path.join(CACHE_DIR, "video");
 const CACHE_THUMB_DIR = path.join(CACHE_DIR, "thumbnails");
 const HISTORY_FILE_PATH = path.join(__dirname, "ythistory.json");
-const SEARCH_DB_PATH = path.join(__dirname, "ytsearchdb.json");
 
 [CACHE_DIR, CACHE_AUDIO_DIR, CACHE_VIDEO_DIR, CACHE_THUMB_DIR].forEach(dir => {
     if (!fs.existsSync(dir)) {
@@ -23,11 +22,6 @@ const SEARCH_DB_PATH = path.join(__dirname, "ytsearchdb.json");
 let cacheHistory = {};
 if (fs.existsSync(HISTORY_FILE_PATH)) {
     cacheHistory = JSON.parse(fs.readFileSync(HISTORY_FILE_PATH, "utf8"));
-}
-
-let searchDB = {};
-if (fs.existsSync(SEARCH_DB_PATH)) {
-    searchDB = JSON.parse(fs.readFileSync(SEARCH_DB_PATH, "utf8"));
 }
 
 module.exports = {
@@ -117,19 +111,11 @@ module.exports = {
         if (args.includes("-s") || args[0].toLowerCase() === "search") {
             const query = args.filter(a => !a.startsWith("-") && a.toLowerCase() !== "search").join(" ");
             if (!query) return message.reply(getLang("missingInput"));
-            const queryKey = query.toLowerCase();
             message.reply(getLang("searching", query));
             try {
-                let videos;
-                if (searchDB[queryKey] && Date.now() - searchDB[queryKey].timestamp < 24 * 60 * 60 * 1000) {
-                    videos = searchDB[queryKey].videos;
-                } else {
-                    const search = await yts({ query, regionCode: "VN" });
-                    if (!search.videos.length) return message.reply(getLang("notFound"));
-                    videos = search.videos.slice(0, 3);
-                    searchDB[queryKey] = { videos, timestamp: Date.now() };
-                    fs.writeFileSync(SEARCH_DB_PATH, JSON.stringify(searchDB, null, 2));
-                }
+                const search = await yts({ query, regionCode: "VN" });
+                if (!search.videos.length) return message.reply(getLang("notFound"));
+                const videos = search.videos.slice(0, 3);
                 let msg = getLang("searchResults", query, videos.map((v, i) => `${i + 1}. ${v.title} - ${v.author.name}`).join("\n"));
                 const attachments = [];
                 for (const video of videos) {
@@ -285,7 +271,7 @@ module.exports = {
             const attachments = thumbnailPath ? [fs.createReadStream(thumbnailPath)] : [];
             const msg = getLang("videoInfo", video.title, video.author.name, views, shortUrl);
             return message.reply({ body: msg, attachment: attachments }, (err, info) => {
-                if (err) return message.err(err);
+                if (err) return message.reply(err);
                 global.GoatBot.onReply.set(info.messageID, {
                     commandName: "yt",
                     messageID: info.messageID,
@@ -303,9 +289,9 @@ module.exports = {
             try {
                 await api.unsendMessage(replyMessageID);
             } catch (e) {
-                console.error(`YT: Error unsending choose type message ${replyMessageID}:`, e);
+                console.error(`YT: Error unsending message ${replyMessageID}:`, e);
             }
-            const downloadType = choice === 1 ? "audio" : "video";
+            const downloadType = choice === 1" ? "audio" : "video";
             const url = `https://www.youtube.com/watch?v=${videoID}`;
             const mediaDir = downloadType === "audio" ? CACHE_AUDIO_DIR : CACHE_VIDEO_DIR;
             const filePath = path.join(mediaDir, `${cacheKey}.${downloadType === "audio" ? "mp3" : "mp4"}`);
@@ -322,9 +308,9 @@ module.exports = {
             let title, thumbnail;
             try {
                 const search = await yts({ videoId: videoID });
-                title = search.title;
+                title = search.title || url;
                 thumbnail = search.thumbnail || `https://img.youtube.com/vi/${videoID}/hqdefault.jpg`;
-            } catch (e) {
+            } catch (err) {
                 console.error(`YT: Error fetching video info for ${videoID}:`, e);
                 title = url;
                 thumbnail = `https://img.youtube.com/vi/${videoID}/hqdefault.jpg`;
