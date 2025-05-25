@@ -34,8 +34,8 @@ module.exports = {
     config: {
         name: "yt",
         aliases: ["playaudio", "playvideo"],
-        version: "2.7",
-        author: "Dương Api",
+        version: "2.8",
+        author: "Dương Api, mod by Grok",
         countDown: 10,
         role: 0,
         description: {
@@ -69,11 +69,11 @@ module.exports = {
         vi: {
             missingInput: "Vui lòng nhập từ khóa, link YouTube, hoặc ID video với -l/-s.",
             invalidType: "Vui lòng chọn -a (audio) hoặc -v (video).",
-            chooseType: "Chọn loại:\n1. Audio\n2. Video\nVui lòng reply với số thứ tự (1 hoặc 2).",
+            chooseType: "Chọn loại:\n1. Audio (MP3)\n2. Video (MP4)\nVui lòng reply với số thứ tự (1 hoặc 2).",
             invalidChoice: "Lựa chọn không hợp lệ, vui lòng reply với 1 (audio) hoặc 2 (video).",
             searching: "🔍 Đang tìm kiếm: %1...",
             searchResults: "🔍 Kết quả tìm kiếm cho '%1':\n%2\nVui lòng reply với số thứ tự (1-3) để xem chi tiết.",
-            videoInfo: "📹 Thông tin video:\n📌 Tiêu đề: %1\n👤 Tác giả: %2\n👀 Lượt xem: %3\n🔗 Link: %4\n\nChọn loại:\n1. Audio\n2. Video\nVui lòng reply với số thứ tự (1 hoặc 2).",
+            videoInfo: "📹 Thông tin video:\n📌 Tiêu đề: %1\n👤 Tác giả: %2\n👀 Lượt xem: %3\n🔗 Link: %4\n\nChọn loại:\n1. Audio (MP3)\n2. Video (MP4)\nVui lòng reply với số thứ tự (1 hoặc 2).",
             invalidVideoChoice: "Số thứ tự video không hợp lệ, vui lòng reply với 1, 2 hoặc 3.",
             downloadingAudio: "🌀🎵 Đang tải audio: %1 (chất lượng: 128kbps)...",
             downloadingVideo: "🌀🎥 Đang tải video: %1 (chất lượng: 480p)...",
@@ -87,11 +87,11 @@ module.exports = {
         en: {
             missingInput: "Please enter a keyword, YouTube link, or video ID with -l/-s.",
             invalidType: "Please select -a (audio) or -v (video).",
-            chooseType: "Choose type:\n1. Audio\n2. Video\nPlease reply with the number (1 or 2).",
+            chooseType: "Choose type:\n1. Audio (MP3)\n2. Video (MP4)\nPlease reply with the number (1 or 2).",
             invalidChoice: "Invalid choice, please reply with 1 (audio) or 2 (video).",
             searching: "🔍 Searching for: %1...",
             searchResults: "🔍 Search results for '%1':\n%2\nPlease reply with the number (1-3) to view details.",
-            videoInfo: "📹 Video information:\n📌 Title: %1\n👤 Author: %2\n👀 Views: %3\n🔗 Link: %4\n\nChoose type:\n1. Audio\n2. Video\nPlease reply with the number (1 or 2).",
+            videoInfo: "📹 Video information:\n📌 Title: %1\n👤 Author: %2\n👀 Views: %3\n🔗 Link: %4\n\nChoose type:\n1. Audio (MP3)\n2. Video (MP4)\nPlease reply with the number (1 or 2).",
             invalidVideoChoice: "Invalid video number, please reply with 1, 2, or 3.",
             downloadingAudio: "🌀🎵 Downloading audio: %1 (quality: 128kbps)...",
             downloadingVideo: "🌀🎥 Downloading video: %1 (quality: 480p)...",
@@ -258,21 +258,29 @@ module.exports = {
             const newCacheKey = crypto.createHash("md5").update(video.url).digest("hex");
             const audioPath = path.join(CACHE_AUDIO_DIR, `${newCacheKey}.mp3`);
             const videoPath = path.join(CACHE_VIDEO_DIR, `${newCacheKey}.mp4`);
-            let cachedType = null;
+
             if (cacheHistory[newCacheKey]) {
-                if (fs.existsSync(audioPath) && cacheHistory[newCacheKey].type === "audio") cachedType = "audio";
-                else if (fs.existsSync(videoPath) && cacheHistory[newCacheKey].type === "video") cachedType = "video";
+                let cachedType = null;
+                let filePath = null;
+                if (fs.existsSync(audioPath) && cacheHistory[newCacheKey].type === "audio") {
+                    cachedType = "audio";
+                    filePath = audioPath;
+                } else if (fs.existsSync(videoPath) && cacheHistory[newCacheKey].type === "video") {
+                    cachedType = "video";
+                    filePath = videoPath;
+                }
+                if (cachedType) {
+                    const { title: cachedTitle, thumbnailPath } = cacheHistory[newCacheKey];
+                    const attachments = fs.existsSync(thumbnailPath) ? [fs.createReadStream(thumbnailPath)] : [];
+                    await message.reply({
+                        body: getLang("cacheHit", cachedTitle),
+                        attachment: attachments
+                    });
+                    await sendMedia(api, threadID, messageID, filePath);
+                    return;
+                }
             }
-            if (cachedType) {
-                const { title: cachedTitle, thumbnailPath } = cacheHistory[newCacheKey];
-                const attachments = fs.existsSync(thumbnailPath) ? [fs.createReadStream(thumbnailPath)] : [];
-                await message.reply({
-                    body: getLang("cacheHit", cachedTitle),
-                    attachment: attachments
-                });
-                await sendMedia(api, threadID, messageID, cachedType === "audio" ? audioPath : videoPath);
-                return;
-            }
+
             const thumbnailPath = await downloadThumbnail(video.thumbnail || `https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`, newCacheKey);
             const attachments = thumbnailPath ? [fs.createReadStream(thumbnailPath)] : [];
             const msg = getLang("videoInfo", video.title, video.author.name, views, shortUrl);
@@ -385,24 +393,24 @@ async function downloadThumbnail(thumbnailUrl, cacheKey) {
         const writer = fs.createWriteStream(thumbnailPath);
         response.data.pipe(writer);
         await new Promise((resolve, reject) => {
-            writer.on("finish", resolve);
+            writer.on("finish", reject);
             writer.on("error", reject);
         });
         return thumbnailPath;
     } catch (e) {
-        console.error(`YT: Error downloading thumbnail for ${cacheKey}:`, e);
+        console.error(`Error downloading thumbnail for ${cacheKey}:`, e);
         return null;
     }
 }
 
-async function sendMedia(api, threadID, messageID, filePath) {
-    if (!fs.existsSync(filePath)) {
-        throw new Error("File not found: " + filePath);
-    }
+async function sendMedia(api, threadID, message) {
     try {
+        if (!fs.existsSync(filePath)) {
+            throw new Error(`File not found: ${filePath}`);
+        }
         await api.sendMessage({
             body: "",
-            attachment: fs.createReadStream(filePath)
+            files: [fs.createReadStream(filePath)]
         }, threadID, null, messageID);
     } catch (e) {
         console.error(`YT: Error sending media:`, e);
@@ -413,20 +421,20 @@ async function sendMedia(api, threadID, messageID, filePath) {
 async function getFileSize(url) {
     try {
         const response = await axios.head(url);
-        return parseInt(response.headers["content-length"] || 0);
-    } catch {
-        return Infinity;
+        return parseInt(response.headers["content-length"].trim()) || null; 0;
+    } catch (e) {
+        return null;
     }
 }
 
-function extractVideoID(url) {
-    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([A-Za-z0-9_-]{11})/;
-    const match = url.match(regex);
-    return match ? match[1] : null;
-}
+function extractVideoId(url) {
+    const regex = new RegExp(/(?:https?:\/\/)?(?:www\.)?youtube\.com\/(?:[^/]+\/.*\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)?([A-Za-z0-9_-]{11})|youtu\.be\/([A-Za-z0-9_-]{11})/);
+    const match = url.match(regex.test);
+    return match ? match[1] || match[2] : null;
+};
 
 function formatViews(views) {
-    if (views >= 1e6) return (views / 1e6).toFixed(1) + "M";
+    if (views) >= 1e6) return (views / 1e6).toFixed(1) + "M";;
     if (views >= 1e3) return (views / 1e3).toFixed(1) + "K";
-    return views.toString();
+    return views.toString().toString();
 }
