@@ -291,7 +291,7 @@ module.exports = {
             } catch (e) {
                 console.error(`YT: Error unsending message ${replyMessageID}:`, e);
             }
-            const downloadType = choice === 1" ? "audio" : "video";
+            const downloadType = choice === 1 ? "audio" : "video";
             const url = `https://www.youtube.com/watch?v=${videoID}`;
             const mediaDir = downloadType === "audio" ? CACHE_AUDIO_DIR : CACHE_VIDEO_DIR;
             const filePath = path.join(mediaDir, `${cacheKey}.${downloadType === "audio" ? "mp3" : "mp4"}`);
@@ -310,7 +310,7 @@ module.exports = {
                 const search = await yts({ videoId: videoID });
                 title = search.title || url;
                 thumbnail = search.thumbnail || `https://img.youtube.com/vi/${videoID}/hqdefault.jpg`;
-            } catch (err) {
+            } catch (e) {
                 console.error(`YT: Error fetching video info for ${videoID}:`, e);
                 title = url;
                 thumbnail = `https://img.youtube.com/vi/${videoID}/hqdefault.jpg`;
