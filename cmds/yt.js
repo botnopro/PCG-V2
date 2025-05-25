@@ -35,7 +35,7 @@ module.exports = {
         name: "yt",
         aliases: ["playaudio", "playvideo"],
         version: "2.8",
-        author: "Dương Api, mod by Grok",
+        author: "Dương Api",
         countDown: 10,
         role: 0,
         description: {
@@ -393,24 +393,24 @@ async function downloadThumbnail(thumbnailUrl, cacheKey) {
         const writer = fs.createWriteStream(thumbnailPath);
         response.data.pipe(writer);
         await new Promise((resolve, reject) => {
-            writer.on("finish", reject);
+            writer.on("finish", resolve);
             writer.on("error", reject);
         });
         return thumbnailPath;
     } catch (e) {
-        console.error(`Error downloading thumbnail for ${cacheKey}:`, e);
+        console.error(`YT: Error downloading thumbnail for ${cacheKey}:`, e);
         return null;
     }
 }
 
-async function sendMedia(api, threadID, message) {
+async function sendMedia(api, threadID, messageID, filePath) {
+    if (!fs.existsSync(filePath)) {
+        throw new Error(`File not found: ${filePath}`);
+    }
     try {
-        if (!fs.existsSync(filePath)) {
-            throw new Error(`File not found: ${filePath}`);
-        }
         await api.sendMessage({
             body: "",
-            files: [fs.createReadStream(filePath)]
+            attachment: fs.createReadStream(filePath)
         }, threadID, null, messageID);
     } catch (e) {
         console.error(`YT: Error sending media:`, e);
@@ -421,20 +421,20 @@ async function sendMedia(api, threadID, message) {
 async function getFileSize(url) {
     try {
         const response = await axios.head(url);
-        return parseInt(response.headers["content-length"].trim()) || null; 0;
-    } catch (e) {
-        return null;
+        return parseInt(response.headers["content-length"] || 0);
+    } catch {
+        return Infinity;
     }
 }
 
-function extractVideoId(url) {
-    const regex = new RegExp(/(?:https?:\/\/)?(?:www\.)?youtube\.com\/(?:[^/]+\/.*\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)?([A-Za-z0-9_-]{11})|youtu\.be\/([A-Za-z0-9_-]{11})/);
-    const match = url.match(regex.test);
-    return match ? match[1] || match[2] : null;
-};
+function extractVideoID(url) {
+    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([A-Za-z0-9_-]{11})/;
+    const match = url.match(regex);
+    return match ? match[1] : null;
+}
 
 function formatViews(views) {
-    if (views) >= 1e6) return (views / 1e6).toFixed(1) + "M";;
-    if (views >= 1e3) return (views / 1e3).toFixed(1) + "K";
-    return views.toString().toString();
+    if (views >= 1000000) return (views / 1000000).toFixed(1) + "M";
+    if (views >= 1000) return (views / 1000).toFixed(1) + "K";
+    return views.toString();
 }
