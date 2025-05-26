@@ -77,7 +77,7 @@ module.exports = {
     onStart: async function ({ api, event, args, message, getLang }) {
         const { threadID, messageID } = event;
         const input = args.join(" ").trim().toLowerCase();
-        if (args.includes("-c") || args]0] === "cache") {
+        if (args.includes("-c") || args[0] === "cache") {
             const audioCount = fs.readdirSync(CACHE_AUDIO_DIR).filter(file => file.endsWith(".mp3")).length;
             const videoCount = fs.readdirSync(CACHE_VIDEO_DIR).filter(file => file.endsWith(".mp4")).length;
             return message.reply(getLang("cacheInfo", videoCount, audioCount));
