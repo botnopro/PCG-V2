@@ -255,25 +255,12 @@ async function downloadMedia(api, threadID, messageID, url, type, cacheKey, titl
     const downloadingMsg = type === "audio" ? getLang("downloadingAudio", title || url) : getLang("downloadingVideo", title || url);
     const tooLargeMsg = type === "audio" ? getLang("tooLargeAudio") : getLang("tooLargeVideo");
 
-    const thumbnailPath = await downloadThumbnail(thumbnail, cacheKey);
-    if (thumbnailPath) {
-        try {
-            await api.sendMessage({
-                body: downloadingMsg,
-                attachment: fs.createReadStream(thumbnailPath)
-            }, threadID, null, messageID);
-        } catch (e) {
-            console.error(`YT: Lỗi khi gửi tin nhắn tải:`, e);
-            await api.sendMessage(downloadingMsg, threadID, null, messageID);
-        }
-    } else {
-        await api.sendMessage(downloadingMsg, threadID, null, messageID);
-    }
+    await api.sendMessage(downloadingMsg, threadID, null, messageID);
 
     try {
         const result = await ogmp3.download(url, quality, type);
         if (!result || !result.status || !result.result || !result.result.download) {
-            throw new Error(result?.error || "Tải xuống thất bại");
+            throw new Error(result?.error || "Download failed");
         }
         const fileSize = await getFileSize(result.result.download);
         if (fileSize > limit) return api.sendMessage(tooLargeMsg, threadID, null, messageID);
@@ -289,13 +276,13 @@ async function downloadMedia(api, threadID, messageID, url, type, cacheKey, titl
             writer.on("error", reject);
         });
         if (!fs.existsSync(filePath) || fs.statSync(filePath).size === 0) {
-            throw new Error("File tải xuống không hợp lệ");
+            throw new Error("Downloaded file is invalid");
         }
         cacheHistory[cacheKey] = {
             link: url,
             query: title || url,
             filePath,
-            thumbnailPath,
+            thumbnailPath: await downloadThumbnail(thumbnail, cacheKey),
             type,
             title: result.result.title || title,
             timestamp: Date.now()
@@ -303,7 +290,7 @@ async function downloadMedia(api, threadID, messageID, url, type, cacheKey, titl
         fs.writeFileSync(HISTORY_FILE_PATH, JSON.stringify(cacheHistory, null, 2));
         await sendMedia(api, threadID, messageID, filePath);
     } catch (e) {
-        console.error(`YT: Lỗi khi tải media:`, e);
+        console.error(`YT: Error downloading media:`, e);
         await api.sendMessage(getLang("error", e.message), threadID, null, messageID);
     }
 }
@@ -353,7 +340,7 @@ async function getFileSize(url) {
     }
 }
 function extractVideoID(url) {
-    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([A-Za-z0-9_-]{11})/;
+    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([A-Za-z0-9_-]{11})/;
     const match = url.match(regex);
     return match ? match[1] : null;
 }
