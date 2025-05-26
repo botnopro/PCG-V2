@@ -39,6 +39,7 @@ module.exports = {
                 + "🔹 `{pn} -l <ID video>` (VD: uIO0_7eo): Yêu cầu tải audio/video theo ID video\n"
                 + "🔹 `{pn} -s <từ khóa>` hoặc `search <từ khóa>`: Tìm kiếm 3 video, trả lời số thứ tự để xem chi tiết\n"
                 + "🔹 `{pn} cache`: Xem số lượng file video/audio đã lưu trong cache\n"
+                + "{pn} -clear: Xóa toàn bộ cache (video, audio, thumbnails) và lịch sử\n"
                 + "📌 **Ví dụ:** `{pn} -s Sơn Tùng`"
         }
     },
@@ -70,7 +71,8 @@ module.exports = {
             tooLargeVideo: "⚠️ File video quá lớn (>83MB), không thể tải.",
             notFound: "❌ Không tìm thấy video/audio hoặc không thể tải.",
             error: "❌ Lỗi: %1",
-            cacheInfo: "💾 Hệ thống bot hiện đang lưu trữ %1 video và %2 audio."
+            cacheInfo: "💾 Hệ thống bot hiện đang lưu trữ %1 video và %2 audio.",
+            cacheCleared: "✅ Đã xóa toàn bộ cache (video, audio, thumbnails) và lịch sử!"
         }
     },
 
@@ -111,6 +113,29 @@ module.exports = {
                 console.error(`YT: Lỗi khi tìm kiếm ${query}:`, e);
                 return message.reply(getLang("notFound"));
             }
+        }
+        if (args.includes("-clear")) {
+        try {
+            // Xóa file trong thư mục audio
+            fs.readdirSync(CACHE_AUDIO_DIR).forEach(file => {
+                if (file.endsWith(".mp3")) fs.unlinkSync(path.join(CACHE_AUDIO_DIR, file));
+            });
+            // Xóa file trong thư mục video
+            fs.readdirSync(CACHE_VIDEO_DIR).forEach(file => {
+                if (file.endsWith(".mp4")) fs.unlinkSync(path.join(CACHE_VIDEO_DIR, file));
+            });
+            // Xóa file trong thư mục thumbnails
+            fs.readdirSync(CACHE_THUMB_DIR).forEach(file => {
+                if (file.endsWith(".jpg")) fs.unlinkSync(path.join(CACHE_THUMB_DIR, file));
+            });
+            // Làm mới file ythistory.json
+            cacheHistory = {};
+            fs.writeFileSync(HISTORY_FILE_PATH, JSON.stringify(cacheHistory, null, 2));
+            return message.reply(getLang("cacheCleared"));
+        } catch (e) {
+            console.error(`YT: Error clearing cache:`, e);
+            return message.reply(getLang("error", e.message));
+        }
         }
         if (args.includes("-l")) {
             const videoID = args[args.indexOf("-l") + 1];
