@@ -331,15 +331,16 @@ async function downloadThumbnail(thumbnailUrl, cacheKey) {
 }
 async function sendMedia(api, threadID, messageID, filePath) {
     if (!fs.existsSync(filePath)) {
-        throw new Error("File không tồn tại: " + filePath);
+        throw new Error(`File not found: ${filePath}`);
     }
     try {
-        await api.sendMessage({
+        const messageOptions = {
             body: "",
             attachment: fs.createReadStream(filePath)
-        }, threadID, null, messageID);
+        };
+        await api.sendMessage(messageOptions, threadID, null, messageID);
     } catch (e) {
-        console.error(`YT: Lỗi khi gửi media:`, e);
+        console.error(`YT: Error sending media:`, e);
         throw e;
     }
 }
