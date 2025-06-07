@@ -5,7 +5,7 @@ const axios = require("axios");
 module.exports = {
   config: {
     name: "info",
-    version: "1.7",
+    version: "1.9.1",
     author: "Dương Sú & Gemini",
     countDown: 5,
     role: 0,
@@ -28,7 +28,6 @@ module.exports = {
     const { threadID, senderID, mentions, messageReply } = event;
     const infoDir = path.join(__dirname, "../../info");
     const infoFile = path.join(infoDir, "info.json");
-
     if (!fs.existsSync(infoDir)) {
       fs.mkdirSync(infoDir, { recursive: true });
     }
@@ -37,40 +36,20 @@ module.exports = {
     const toSuperscript = (num) => String(num).split("").map(digit => superscriptMap[digit]).join("");
     const toBoldItalicSerif = (text) => {
       const charMap = {
-  'A': '𝐴', 'B': '𝐵', 'C': '𝐶', 'D': '𝐷', 'E': '𝐸', 'F': '𝐹', 'G': '𝐺',
-  'H': '𝐻', 'I': '𝐼', 'J': '𝐽', 'K': '𝐾', 'L': '𝐿', 'M': '𝑀',
-  'N': '𝑁', 'O': '𝑂', 'P': '𝑃', 'Q': '𝑄', 'R': '𝑅', 'S': '𝑆',
-  'T': '𝑇', 'U': '𝑈', 'V': '𝑉', 'W': '𝑊', 'X': '𝑋', 'Y': '𝑌', 'Z': '𝑍',
-  'a': '𝑎', 'b': '𝑏', 'c': '𝑐', 'd': '𝑑', 'e': '𝑒', 'f': '𝑓', 'g': '𝑔',
-  'h': 'ℎ', 'i': '𝑖', 'j': '𝑗', 'k': '𝑘', 'l': '𝑙', 'm': '𝑚',
-  'n': '𝑛', 'o': '𝑜', 'p': '𝑝', 'q': '𝑞', 'r': '𝑟', 's': '𝑠',
-  't': '𝑡', 'u': '𝑢', 'v': '𝑣', 'w': '𝑤', 'x': '𝑥', 'y': '𝑦', 'z': '𝑧',
-  '0': '0', '1': '1', '2': '2', '3': '3', '4': '4',
-  '5': '5', '6': '6', '7': '7', '8': '8', '9': '9',
-  'ă': '𝑎̆', 'â': '𝑎̂', 'đ': '𝑑', 'ê': '𝑒̂', 'ô': '𝑜̂', 'ơ': '𝑜̛', 'ư': '𝑢̛',
-  'á': '𝑎́', 'à': '𝑎̀', 'ả': '𝑎̉', 'ã': '𝑎̃', 'ạ': '𝑎̣',
-  'ấ': '𝑎̂́', 'ầ': '𝑎̂̀', 'ẩ': '𝑎̂̉', 'ẫ': '𝑎̂̃', 'ậ': '𝑎̣̂',
-  'ắ': '𝑎̆́', 'ằ': '𝑎̆̀', 'ẳ': '𝑎̆̉', 'ẵ': '𝑎̆̃', 'ặ': '𝑎̣̆',
-  'é': '𝑒́', 'è': '𝑒̀', 'ẻ': '𝑒̉', 'ẽ': '𝑒̃', 'ẹ': '𝑒̣',
-  'ế': '𝑒̂́', 'ề': '𝑒̂̀', 'ể': '𝑒̂̉', 'ễ': '𝑒̂̃', 'ệ': '𝑒̣̂',
-  'ó': '𝑜́', 'ò': '𝑜̀', 'ỏ': '𝑜̉', 'õ': '𝑜̃', 'ọ': '𝑜̣',
-  'ố': '𝑜̂́', 'ồ': '𝑜̂̀', 'ổ': '𝑜̂̉', 'ỗ': '𝑜̂̃', 'ộ': '𝑜̣̂',
-  'ớ': '𝑜̛́', 'ờ': '𝑜̛̀', 'ở': '𝑜̛̉', 'ỡ': '𝑜̛̃', 'ợ': '𝑜̛̣',
-  'ú': '𝑢́', 'ù': '𝑢̀', 'ủ': '𝑢̉', 'ũ': '𝑢̃', 'ụ': '𝑢̣',
-  'ứ': '𝑢̛́', 'ừ': '𝑢̛̀', 'ử': '𝑢̛̉', 'ữ': '𝑢̛̃', 'ự': '𝑢̛̣',
-  'ý': '𝑦́', 'ỳ': '𝑦̀', 'ỷ': '𝑦̉', 'ỹ': '𝑦̃', 'ỵ': '𝑦̣',
-  ' ': ' ', '.': '.', ',': ',', '!': '!', '?': '?', ':': ':', '-': '-', '(': '(', ')': ')'
-};
+        'A': '𝔸', 'B': '𝔹', 'C': 'ℂ', 'D': '𝔻', 'E': '𝔼', 'F': '𝔽', 'G': '𝔾', 'H': 'ℍ', 'I': '𝕀', 'J': '𝕁', 'K': '𝕂', 'L': '𝕃', 'M': '𝕄',
+        'N': 'ℕ', 'O': '𝕆', 'P': 'ℙ', 'Q': 'ℚ', 'R': 'ℝ', 'S': '𝕊', 'T': '𝕋', 'U': '𝕌', 'V': '𝕍', 'W': '𝕎', 'X': '𝕏', 'Y': '𝕐', 'Z': 'ℤ',
+        'a': '𝕒', 'b': '𝕓', 'c': '𝕔', 'd': '𝕕', 'e': '𝕖', 'f': '𝕗', 'g': '𝕘', 'h': '𝕙', 'i': '𝕚', 'j': '𝕛', 'k': '𝕜', 'l': '𝕝', 'm': '𝕞',
+        'n': '𝕟', 'o': '𝕠', 'p': '𝕡', 'q': '𝕢', 'r': '𝕣', 's': '𝕤', 't': '𝕥', 'u': '𝕦', 'v': '𝕧', 'w': '𝕨', 'x': '𝕩', 'y': '𝕪', 'z': '𝕫',
+        '0': '𝟘', '1': '𝟙', '2': '𝟚', '3': '𝟛', '4': '𝟜', '5': '𝟝', '6': '𝟞', '7': '𝟟', '8': '𝟠', '9': '𝟡', ' ': ' ', ':': ':', '-': '-', '.': '.', '!': '!', '?': '?', ',': ',', '(': '(', ')': ')', '⚜': '⚜', '️': '️', 'ℹ': 'ℹ'
+      };
       return text.split("").map(char => charMap[char] || char).join("");
     };
-
     try {
       if (args[0] === "add") {
         userInfo[senderID] = { ...userInfo[senderID], step: "name", prevSteps: [] };
         fs.writeFileSync(infoFile, JSON.stringify(userInfo, null, 2));
         return message.reply("Nhập tên của bạn :3");
-      } 
-      else if (args[0] === "name" && args[1]) {
+      } else if (args[0] === "name" && args[1]) {
         if (!userInfo[senderID] || !userInfo[senderID].name) return message.reply("Bạn chưa điền thông tin! Vui lòng ghi .info add để đăng ký");
         const nameInput = args.slice(1).join(" ").trim();
         if (nameInput.length > 20 || nameInput.includes("\n")) return message.reply("Tên tối đa 20 ký tự và không được xuống dòng, vui lòng nhập lại");
@@ -141,8 +120,7 @@ module.exports = {
         userInfo[senderID].attachment = path.basename(filePath);
         fs.writeFileSync(infoFile, JSON.stringify(userInfo, null, 2));
         return message.reply("Đã sửa file thành công!");
-      } 
-      else if (args[0] === "me" || args.length === 0) {
+      } else if (args[0] === "me" || args.length === 0) {
         if (!userInfo[senderID] || !userInfo[senderID].name) {
           return message.reply("Bạn chưa điền thông tin! Vui lòng ghi .info add để đăng ký");
         }
@@ -176,11 +154,14 @@ module.exports = {
             threadID
           );
         } catch (apiError) {
-          console.error("Lỗi khi lấy dữ liệu API cho '.info me':", apiError);
-          return message.reply("Không thể lấy dữ liệu từ Facebook, vui lòng thử lại sau.");
+          console.error(`[INFO COMMAND] Lỗi khi gọi api.getUserInfo cho ID: ${senderID}.`);
+          console.error("[INFO COMMAND] Chi tiết lỗi:", apiError);
+          if (apiError.error === 'Not logged in' || (apiError.message && apiError.message.includes("No valid cookie"))) {
+              return message.reply("Lỗi: Phiên đăng nhập (appstate) đã hết hạn hoặc không hợp lệ. Vui lòng cập nhật.");
+          }
+          return message.reply("Không thể lấy dữ liệu từ Facebook, vui lòng thử lại sau. (Chi tiết đã được ghi vào console).");
         }
-      } 
-      else if (Object.keys(mentions).length > 0) {
+      } else if (Object.keys(mentions).length > 0) {
         const targetID = Object.keys(mentions)[0];
         if (!userInfo[targetID] || !userInfo[targetID].name) {
           return message.reply("Người dùng chưa điền thông tin!");
@@ -215,11 +196,14 @@ module.exports = {
             threadID
           );
         } catch (apiError) {
-          console.error("Lỗi khi lấy dữ liệu API cho '.info @tag':", apiError);
-          return message.reply("Không thể lấy dữ liệu từ Facebook cho người dùng này, vui lòng thử lại sau.");
+          console.error(`[INFO COMMAND] Lỗi khi gọi api.getUserInfo cho ID: ${targetID}.`);
+          console.error("[INFO COMMAND] Chi tiết lỗi:", apiError);
+          if (apiError.error === 'Not logged in' || (apiError.message && apiError.message.includes("No valid cookie"))) {
+              return message.reply("Lỗi: Phiên đăng nhập (appstate) đã hết hạn hoặc không hợp lệ. Vui lòng cập nhật.");
+          }
+          return message.reply("Không thể lấy dữ liệu từ Facebook cho người dùng này, vui lòng thử lại sau. (Chi tiết đã được ghi vào console).");
         }
-      } 
-      else {
+      } else {
         return message.reply("Cú pháp không hợp lệ! Sử dụng `.info`, `.info me`, `.info @tag`, `.info add`, `.info name <tên>`, `.info nickname <biệt danh>`, `.info age <tuổi>`, `.info hobby <sở thích>`, hoặc `.info file` (reply với file).");
       }
     } catch (error) {
