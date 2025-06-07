@@ -5,7 +5,7 @@ const axios = require("axios");
 module.exports = {
   config: {
     name: "info",
-    version: "1.6",
+    version: "1.7",
     author: "Dương Sú",
     countDown: 5,
     role: 0,
@@ -41,6 +41,34 @@ module.exports = {
       6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹"
     };
     const toSuperscript = (num) => String(num).split("").map(digit => superscriptMap[digit]).join("");
+
+    // Hàm chuyển đổi sang font Bold Italic Serif (chỉ cho nhãn, không áp dụng cho giá trị tiếng Việt)
+    const toBoldItalicSerif = (text) => {
+      const charMap = {
+    'A': '𝔸', 'B': '𝔹', 'C': 'ℂ', 'D': '𝔻', 'E': '𝔼', 'F': '𝔽', 'G': '𝔾', 'H': 'ℍ', 'I': '𝕀', 'J': '𝕁', 'K': '𝕂', 'L': '𝕃', 'M': '𝕄',
+    'N': 'ℕ', 'O': '𝕆', 'P': 'ℙ', 'Q': 'ℚ', 'R': 'ℝ', 'S': '𝕊', 'T': '𝕋', 'U': '𝕌', 'V': '𝕍', 'W': '𝕎', 'X': '𝕏', 'Y': '𝕐', 'Z': 'ℤ',
+    'a': '𝕒', 'b': '𝕓', 'c': '𝕔', 'd': '𝕕', 'e': '𝕖', 'f': '𝕗', 'g': '𝕘', 'h': '𝕙', 'i': '𝕚', 'j': '𝕛', 'k': '𝕜', 'l': '𝕝', 'm': '𝕞',
+    'n': '𝕟', 'o': '𝕠', 'p': '𝕡', 'q': '𝕢', 'r': '𝕣', 's': '𝕤', 't': '𝕥', 'u': '𝕦', 'v': '𝕧', 'w': '𝕨', 'x': '𝕩', 'y': '𝕪', 'z': '𝕫',
+    '0': '𝟘', '1': '𝟙', '2': '𝟚', '3': '𝟛', '4': '𝟜', '5': '𝟝', '6': '𝟞', '7': '𝟟', '8': '𝟠', '9': '𝟡',
+    ' ': ' ', ':': ':', '-': '-', '.': '.', '!': '!', '?': '?', ',': ',', '(': '(', ')': ')',
+
+    // Hỗ trợ tiếng Việt cơ bản (được ghép dấu)
+    'ă': '𝕒̆', 'ắ': '𝕒̆́', 'ằ': '𝕒̆̀', 'ẳ': '𝕒̆̉', 'ẵ': '𝕒̆̃', 'ặ': '𝕒̣̆',
+    'â': '𝕒̂', 'ấ': '𝕒̂́', 'ầ': '𝕒̂̀', 'ẩ': '𝕒̂̉', 'ẫ': '𝕒̂̃', 'ậ': '𝕒̣̂',
+    'ê': '𝕖̂', 'ế': '𝕖̂́', 'ề': '𝕖̂̀', 'ể': '𝕖̂̉', 'ễ': '𝕖̂̃', 'ệ': '𝕖̣̂',
+    'ô': '𝕠̂', 'ố': '𝕠̂́', 'ồ': '𝕠̂̀', 'ổ': '𝕠̂̉', 'ỗ': '𝕠̂̃', 'ộ': '𝕠̣̂',
+    'ơ': '𝕠̛', 'ớ': '𝕠̛́', 'ờ': '𝕠̛̀', 'ở': '𝕠̛̉', 'ỡ': '𝕠̛̃', 'ợ': '𝕠̛̣',
+    'ư': '𝕦̛', 'ứ': '𝕦̛́', 'ừ': '𝕦̛̀', 'ử': '𝕦̛̉', 'ữ': '𝕦̛̃', 'ự': '𝕦̛̣',
+    'đ': '𝕕̣',
+    'á': '𝕒́', 'à': '𝕒̀', 'ả': '𝕒̉', 'ã': '𝕒̃', 'ạ': '𝕒̣',
+    'é': '𝕖́', 'è': '𝕖̀', 'ẻ': '𝕖̉', 'ẽ': '𝕖̃', 'ẹ': '𝕖̣',
+    'í': '𝕚́', 'ì': '𝕚̀', 'ỉ': '𝕚̉', 'ĩ': '𝕚̃', 'ị': '𝕚̣',
+    'ú': '𝕦́', 'ù': '𝕦̀', 'ủ': '𝕦̉', 'ũ': '𝕦̃', 'ụ': '𝕦̣',
+    'ý': '𝕪́', 'ỳ': '𝕪̀', 'ỷ': '𝕪̉', 'ỹ': '𝕪̃', 'ỵ': '𝕪̣',
+    'Ă': '𝔄̆', 'Â': '𝔄̂', 'Ê': '𝔈̂', 'Ô': '𝔒̂', 'Ơ': '𝔒̛', 'Ư': '𝔘̛', 'Đ': '𝔇̣'
+  };
+      return text.split("").map(char => charMap[char] || char).join("");
+    };
 
     try {
       if (args[0] === "add") {
@@ -176,11 +204,11 @@ module.exports = {
           return message.reply("Bạn chưa điền thông tin! Vui lòng ghi .info add để đăng ký");
         }
         const { name, nickname, age, hobby, attachment } = userInfo[senderID];
-        const msg = `ℹ️Thông tin của bạn:\n`
-                  + `⚜️Tên: ${name}\n`
-                  + `⚜️Biệt danh: ${nickname}\n`
-                  + `⚜️Tuổi: ${age}\n`
-                  + `⚜️Sở thích: ${hobby}`;
+        const msg = `${toBoldItalicSerif("ℹ️Thông tin của bạn:")}\n`
+                  + `${toBoldItalicSerif("⚜️Tên:")} ${name}\n`
+                  + `${toBoldItalicSerif("⚜️Biệt danh:")} ${nickname}\n`
+                  + `${toBoldItalicSerif("⚜️Tuổi:")} ${age}\n`
+                  + `${toBoldItalicSerif("⚜️Sở thích:")} ${hobby}`;
         return api.sendMessage(
           { body: msg, attachment: attachment ? fs.createReadStream(path.join(infoDir, attachment)) : null },
           threadID
@@ -191,11 +219,11 @@ module.exports = {
           return message.reply("Người dùng chưa điền thông tin!");
         }
         const { name, nickname, age, hobby, attachment } = userInfo[targetID];
-        const msg = `ℹ️Thông tin của ${mentions[targetID].replace(/@/g, "")}:\n`
-                  + `⚜️Tên: ${name}\n`
-                  + `⚜️Biệt danh: ${nickname}\n`
-                  + `⚜️Tuổi: ${age}\n`
-                  + `⚜️Sở thích: ${hobby}`;
+        const msg = `${toBoldItalicSerif(`ℹ️Thông tin của ${mentions[targetID].replace(/@/g, "")}:`)}\n`
+                  + `${toBoldItalicSerif("⚜️Tên:")} ${name}\n`
+                  + `${toBoldItalicSerif("⚜️Biệt danh:")} ${nickname}\n`
+                  + `${toBoldItalicSerif("⚜️Tuổi:")} ${age}\n`
+                  + `${toBoldItalicSerif("⚜️Sở thích:")} ${hobby}`;
         return api.sendMessage(
           { body: msg, attachment: attachment ? fs.createReadStream(path.join(infoDir, attachment)) : null },
           threadID
@@ -353,10 +381,12 @@ module.exports = {
 
         const filePath = path.join(infoDir, `${senderID}_${Date.now()}${ext}`);
         fs.writeFileSync(filePath, Buffer.from(response.data));
+
         userInfo[senderID].attachment = path.basename(filePath);
         userInfo[senderID].step = undefined;
         userInfo[senderID].prevSteps = [];
         fs.writeFileSync(infoFile, JSON.stringify(userInfo, null, 2));
+
         const nicknameWithAge = `${userInfo[senderID].nickname} ${toSuperscript(userInfo[senderID].age)}`;
         try {
           await api.changeNickname(nicknameWithAge, threadID, senderID);
