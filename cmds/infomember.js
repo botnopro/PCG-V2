@@ -5,7 +5,7 @@ const axios = require("axios");
 module.exports = {
   config: {
     name: "info",
-    version: "1.9.1",
+    version: "1.9.2",
     author: "Dương Sú & Gemini",
     countDown: 5,
     role: 0,
@@ -24,45 +24,61 @@ module.exports = {
          + `Nhập 'cancel' để hủy, 'back' để quay lại bước trước khi đang thêm thông tin.`,
     packages: ["axios"]
   },
+
   onStart: async function ({ api, args, message, event, usersData, global, Threads }) {
     const { threadID, senderID, mentions, messageReply } = event;
     const infoDir = path.join(__dirname, "../../info");
     const infoFile = path.join(infoDir, "info.json");
+
     if (!fs.existsSync(infoDir)) {
       fs.mkdirSync(infoDir, { recursive: true });
     }
+
     let userInfo = fs.existsSync(infoFile) ? JSON.parse(fs.readFileSync(infoFile)) : {};
+
     const superscriptMap = { 0: "⁰", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹" };
     const toSuperscript = (num) => String(num).split("").map(digit => superscriptMap[digit]).join("");
+
     const toBoldItalicSerif = (text) => {
       const charMap = {
-        'A': '𝔸', 'B': '𝔹', 'C': 'ℂ', 'D': '𝔻', 'E': '𝔼', 'F': '𝔽', 'G': '𝔾', 'H': 'ℍ', 'I': '𝕀', 'J': '𝕁', 'K': '𝕂', 'L': '𝕃', 'M': '𝕄',
-        'N': 'ℕ', 'O': '𝕆', 'P': 'ℙ', 'Q': 'ℚ', 'R': 'ℝ', 'S': '𝕊', 'T': '𝕋', 'U': '𝕌', 'V': '𝕍', 'W': '𝕎', 'X': '𝕏', 'Y': '𝕐', 'Z': 'ℤ',
-        'a': '𝕒', 'b': '𝕓', 'c': '𝕔', 'd': '𝕕', 'e': '𝕖', 'f': '𝕗', 'g': '𝕘', 'h': '𝕙', 'i': '𝕚', 'j': '𝕛', 'k': '𝕜', 'l': '𝕝', 'm': '𝕞',
-        'n': '𝕟', 'o': '𝕠', 'p': '𝕡', 'q': '𝕢', 'r': '𝕣', 's': '𝕤', 't': '𝕥', 'u': '𝕦', 'v': '𝕧', 'w': '𝕨', 'x': '𝕩', 'y': '𝕪', 'z': '𝕫',
-        '0': '𝟘', '1': '𝟙', '2': '𝟚', '3': '𝟛', '4': '𝟜', '5': '𝟝', '6': '𝟞', '7': '𝟟', '8': '𝟠', '9': '𝟡', ' ': ' ', ':': ':', '-': '-', '.': '.', '!': '!', '?': '?', ',': ',', '(': '(', ')': ')', '⚜': '⚜', '️': '️', 'ℹ': 'ℹ'
-      };
+  'A': '𝐴', 'B': '𝐵', 'C': '𝐶', 'D': '𝐷', 'E': '𝐸', 'F': '𝐹', 'G': '𝐺',
+  'H': '𝐻', 'I': '𝐼', 'J': '𝐽', 'K': '𝐾', 'L': '𝐿', 'M': '𝑀',
+  'N': '𝑁', 'O': '𝑂', 'P': '𝑃', 'Q': '𝑄', 'R': '𝑅', 'S': '𝑆',
+  'T': '𝑇', 'U': '𝑈', 'V': '𝑉', 'W': '𝑊', 'X': '𝑋', 'Y': '𝑌', 'Z': '𝑍',
+  'a': '𝑎', 'b': '𝑏', 'c': '𝑐', 'd': '𝑑', 'e': '𝑒', 'f': '𝑓', 'g': '𝑔',
+  'h': 'ℎ', 'i': '𝑖', 'j': '𝑗', 'k': '𝑘', 'l': '𝑙', 'm': '𝑚',
+  'n': '𝑛', 'o': '𝑜', 'p': '𝑝', 'q': '𝑞', 'r': '𝑟', 's': '𝑠',
+  't': '𝑡', 'u': '𝑢', 'v': '𝑣', 'w': '𝑤', 'x': '𝑥', 'y': '𝑦', 'z': '𝑧', '0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7', '8': '8', '9': '9', 'ă': '𝑎̆', 'â': '𝑎̂', 'đ': '𝑑', 'ê': '𝑒̂', 'ô': '𝑜̂', 'ơ': '𝑜̛', 'ư': '𝑢̛', 'á': '𝑎́', 'à': '𝑎̀', 'ả': '𝑎̉', 'ã': '𝑎̃', 'ạ': '𝑎̣', 'ấ': '𝑎̂́', 'ầ': '𝑎̂̀', 'ẩ': '𝑎̂̉', 'ẫ': '𝑎̂̃', 'ậ': '𝑎̣̂', 'ắ': '𝑎̆́', 'ằ': '𝑎̆̀', 'ẳ': '𝑎̆̉', 'ẵ': '𝑎̆̃', 'ặ': '𝑎̣̆', 'é': '𝑒́', 'è': '𝑒̀', 'ẻ': '𝑒̉', 'ẽ': '𝑒̃', 'ẹ': '𝑒̣',  'ế': '𝑒̂́', 'ề': '𝑒̂̀', 'ể': '𝑒̂̉', 'ễ': '𝑒̂̃', 'ệ': '𝑒̣̂', 'ó': '𝑜́', 'ò': '𝑜̀', 'ỏ': '𝑜̉', 'õ': '𝑜̃', 'ọ': '𝑜̣', 'ố': '𝑜̂́', 'ồ': '𝑜̂̀', 'ổ': '𝑜̂̉', 'ỗ': '𝑜̂̃', 'ộ': '𝑜̣̂', 'ớ': '𝑜̛́', 'ờ': '𝑜̛̀', 'ở': '𝑜̛̉', 'ỡ': '𝑜̛̃', 'ợ': '𝑜̛̣', 'ú': '𝑢́', 'ù': '𝑢̀', 'ủ': '𝑢̉', 'ũ': '𝑢̃', 'ụ': '𝑢̣', 'ứ': '𝑢̛́', 'ừ': '𝑢̛̀', 'ử': '𝑢̛̉', 'ữ': '𝑢̛̃', 'ự': '𝑢̛̣', 'ý': '𝑦́', 'ỳ': '𝑦̀', 'ỷ': '𝑦̉', 'ỹ': '𝑦̃', 'ỵ': '𝑦̣', ' ': ' ', '.': '.', ',': ',', '!': '!', '?': '?', ':': ':', '-': '-', '(': '(', ')': ')'
+};
       return text.split("").map(char => charMap[char] || char).join("");
     };
+
     try {
       if (args[0] === "add") {
         userInfo[senderID] = { ...userInfo[senderID], step: "name", prevSteps: [] };
         fs.writeFileSync(infoFile, JSON.stringify(userInfo, null, 2));
         return message.reply("Nhập tên của bạn :3");
       } else if (args[0] === "name" && args[1]) {
-        if (!userInfo[senderID] || !userInfo[senderID].name) return message.reply("Bạn chưa điền thông tin! Vui lòng ghi .info add để đăng ký");
+        if (!userInfo[senderID] || !userInfo[senderID].name) {
+          return message.reply("Bạn chưa điền thông tin! Vui lòng ghi .info add để đăng ký");
+        }
         const nameInput = args.slice(1).join(" ").trim();
-        if (nameInput.length > 20 || nameInput.includes("\n")) return message.reply("Tên tối đa 20 ký tự và không được xuống dòng, vui lòng nhập lại");
+        if (nameInput.length > 20 || nameInput.includes("\n")) {
+          return message.reply("Tên tối đa 20 ký tự và không được xuống dòng, vui lòng nhập lại");
+        }
         userInfo[senderID].name = nameInput;
         fs.writeFileSync(infoFile, JSON.stringify(userInfo, null, 2));
         return message.reply(`Đã sửa tên thành: ${nameInput}`);
       } else if (args[0] === "nickname" && args[1]) {
-        if (!userInfo[senderID] || !userInfo[senderID].name) return message.reply("Bạn chưa điền thông tin! Vui lòng ghi .info add để đăng ký");
+        if (!userInfo[senderID] || !userInfo[senderID].name) {
+          return message.reply("Bạn chưa điền thông tin! Vui lòng ghi .info add để đăng ký");
+        }
         const nicknameInput = args.slice(1).join(" ").trim();
         userInfo[senderID].nickname = nicknameInput;
         const nicknameWithAge = `${nicknameInput} ${toSuperscript(userInfo[senderID].age)}`;
         try {
           await api.changeNickname(nicknameWithAge, threadID, senderID);
+          userInfo[senderID].nickname = nicknameInput;
           fs.writeFileSync(infoFile, JSON.stringify(userInfo, null, 2));
           return message.reply(`Đã sửa biệt danh thành: ${nicknameInput}\n🔰Đã đổi tên bạn thành: ${nicknameWithAge}`);
         } catch (error) {
@@ -70,20 +86,30 @@ module.exports = {
           return message.reply(`⚠️Bị lỗi trong quá trình đổi tên\nĐã sửa biệt danh thành: ${nicknameInput}`);
         }
       } else if (args[0] === "age" && args[1]) {
-        if (!userInfo[senderID] || !userInfo[senderID].name) return message.reply("Bạn chưa điền thông tin! Vui lòng ghi .info add để đăng ký");
+        if (!userInfo[senderID] || !userInfo[senderID].name) {
+          return message.reply("Bạn chưa điền thông tin! Vui lòng ghi .info add để đăng ký");
+        }
         let age;
         const inputAge = args[1].trim().toLowerCase();
         const yearMatch = inputAge.match(/^(2k|2k[0-1][0-9]?|19[9][0-9]|20[0-1][0-9])$/);
         if (yearMatch) {
           let year = inputAge;
-          if (year.startsWith("2k")) year = year === "2k" ? "2000" : `20${year.slice(2).padStart(2, "0")}`;
-          else if (year.match(/^(19|20)\d$/)) year = year.padStart(4, "19");
+          if (year.startsWith("2k")) {
+            year = year === "2k" ? "2000" : `20${year.slice(2).padStart(2, "0")}`;
+          } else if (year.match(/^(19|20)\d$/)) {
+            year = year.padStart(4, "19");
+          }
           year = parseInt(year);
-          if (year >= 1990 && year <= 2019) age = new Date().getFullYear() - year;
-          else return message.reply("Năm sinh phải từ 1990 đến 2019:");
+          if (year >= 1990 && year <= 2019) {
+            age = new Date().getFullYear() - year;
+          } else {
+            return message.reply("Năm sinh phải từ 1990 đến 2019:");
+          }
         } else {
           age = parseInt(inputAge);
-          if (isNaN(age) || age < 6 || age > 120) return message.reply("Tuổi phải là số hợp lệ: ví dụ 18 hoặc 2006");
+          if (isNaN(age) || age < 6 || age > 120) {
+            return message.reply("Tuổi phải là số hợp lệ: ví dụ 18 hoặc 2006");
+          }
         }
         userInfo[senderID].age = age;
         const nicknameWithAge = `${userInfo[senderID].nickname} ${toSuperscript(age)}`;
@@ -96,24 +122,38 @@ module.exports = {
           return message.reply(`⚠️Bị lỗi trong quá trình đổi tên\nĐã sửa tuổi thành: ${age}`);
         }
       } else if (args[0] === "hobby" && args[1]) {
-        if (!userInfo[senderID] || !userInfo[senderID].name) return message.reply("Bạn chưa điền thông tin! Vui lòng ghi .info add để đăng ký");
+        if (!userInfo[senderID] || !userInfo[senderID].name) {
+          return message.reply("Bạn chưa điền thông tin! Vui lòng ghi .info add để đăng ký");
+        }
         const hobbyInput = args.slice(1).join(" ").trim();
         userInfo[senderID].hobby = hobbyInput;
         fs.writeFileSync(infoFile, JSON.stringify(userInfo, null, 2));
         return message.reply(`Đã sửa sở thích thành: ${hobbyInput}`);
       } else if (args[0] === "file") {
-        if (!userInfo[senderID] || !userInfo[senderID].name) return message.reply("Bạn chưa điền thông tin! Vui lòng ghi .info add để đăng ký");
-        if (!messageReply || !messageReply.attachments || !messageReply.attachments[0]) return message.reply("Vui lòng reply tin nhắn với một ảnh, video hoặc GIF (tối đa 14MB)!");
+        if (!userInfo[senderID] || !userInfo[senderID].name) {
+          return message.reply("Bạn chưa điền thông tin! Vui lòng ghi .info add để đăng ký");
+        }
+        if (!messageReply || !messageReply.attachments || !messageReply.attachments[0]) {
+          return message.reply("Vui lòng reply tin nhắn với một ảnh, video hoặc GIF (tối đa 14MB)!");
+        }
         const attachment = messageReply.attachments[0];
         const validTypes = ["photo", "video", "animated_image"];
-        if (!validTypes.includes(attachment.type)) return message.reply("Vui lòng reply với một ảnh, video hoặc GIF!");
+        if (!validTypes.includes(attachment.type)) {
+          return message.reply("Vui lòng reply với một ảnh, video hoặc GIF!");
+        }
         const response = await axios.get(attachment.url, { responseType: "arraybuffer" });
-        if (Buffer.from(response.data).length > 14 * 1024 * 1024) return message.reply("File vượt quá 14MB, vui lòng gửi file nhỏ hơn!");
+        const fileSize = Buffer.from(response.data).length;
+        const maxSize = 14 * 1024 * 1024;
+        if (fileSize > maxSize) {
+          return message.reply("File vượt quá 14MB, vui lòng gửi file nhỏ hơn!");
+        }
         let ext;
         switch (attachment.type) { case "photo": ext = ".jpg"; break; case "video": ext = ".mp4"; break; case "animated_image": ext = ".gif"; break; }
         if (userInfo[senderID].attachment) {
           const oldFilePath = path.join(infoDir, userInfo[senderID].attachment);
-          if (fs.existsSync(oldFilePath)) fs.unlinkSync(oldFilePath);
+          if (fs.existsSync(oldFilePath)) {
+            fs.unlinkSync(oldFilePath);
+          }
         }
         const filePath = path.join(infoDir, `${senderID}_${Date.now()}${ext}`);
         fs.writeFileSync(filePath, Buffer.from(response.data));
@@ -211,6 +251,7 @@ module.exports = {
       return message.reply("Đã xảy ra lỗi, vui lòng thử lại sau!");
     }
   },
+
   onChat: async function ({ api, event, message, usersData }) {
     const { threadID, senderID, body } = event;
     const infoDir = path.join(__dirname, "../../info");
